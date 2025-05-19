@@ -3,7 +3,7 @@ name: Convert Sigma Rules to Kibana (Test)
 on:
   push:
     branches:
-      - add-artifact-creation
+      - add-artifact-creation-job
 
 jobs:
   convert-rules:
