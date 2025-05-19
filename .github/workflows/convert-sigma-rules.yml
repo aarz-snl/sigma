@@ -1,16 +1,17 @@
-name: Convert Sigma Rules to Kibana (Test)
+name: Convert Sigma Rules to Kibana
 
 on:
   push:
     branches:
-      - add-artifact-creation-job
+      - add-artifact-creation
   workflow_dispatch:
 
 jobs:
   convert-rules:
     runs-on: ubuntu-latest
     permissions:
-      contents: write  # Needed for creating releases
+      contents: write
+      pages: write
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -30,21 +31,18 @@ jobs:
           pip install sigma-cli
           sigma plugin install elasticsearch
           
-      - name: Convert Windows Rules (Sample)
+      - name: Convert Sigma Rules
         run: |
-          # Just convert a few rules for testing
+          # Create directory for all rules
+          mkdir -p public
+
+          # Convert Windows rules sample
           find ./sigma/rules/windows -type f -name "*.yml" | head -n 10 > windows_rules.txt
-          sigma convert -t lucene -p ecs_windows -f siem_rule_ndjson $(cat windows_rules.txt) > windows_rules.ndjson
-          sed -i 's/"tags": \[[^]]*\]/"tags": \["Sigma Windows"\]/g; s/"severity": "informational"/"severity": "low"/g; s/"enabled": true/"enabled": false/g' windows_rules.ndjson
+          sigma convert -t lucene -p ecs_windows -f siem_rule_ndjson $(cat windows_rules.txt) > public/windows_rules.ndjson
+          sed -i 's/"tags": \[[^]]*\]/"tags": \["Sigma Windows"\]/g; s/"severity": "informational"/"severity": "low"/g; s/"enabled": true/"enabled": false/g' public/windows_rules.ndjson
           
-      - name: Create GitHub Release
-        id: create_release
-        uses: softprops/action-gh-release@v1
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
         with:
-          name: "Sigma Rules for Kibana"
-          tag_name: sigma-rules-${{ github.run_number }}
-          files: windows_rules.ndjson
-          draft: false
-          prerelease: false
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          folder: public
+          branch: gh-pages
