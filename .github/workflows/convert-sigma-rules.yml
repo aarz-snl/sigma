@@ -1,0 +1,37 @@
+name: Convert Sigma Rules to Kibana (Test)
+
+on:
+  workflow_dispatch:
+
+jobs:
+  convert-rules:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Clone Sigma Repository
+        run: |
+          git clone https://github.com/SigmaHQ/sigma.git
+        
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+          
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install sigma-cli
+          sigma plugin install elasticsearch
+          
+      - name: Convert Windows Rules (Sample)
+        run: |
+          # Just convert a few rules for testing
+          find ./sigma/rules/windows -type f -name "*.yml" | head -n 10 > windows_rules.txt
+          sigma convert -t lucene -p ecs_windows -f siem_rule_ndjson $(cat windows_rules.txt) > windows_rules.ndjson
+          sed -i 's/"tags": \[[^]]*\]/"tags": \["Sigma Windows"\]/g; s/"severity": "informational"/"severity": "low"/g; s/"enabled": true/"enabled": false/g' windows_rules.ndjson
+          
+      - name: Upload test artifacts
+        uses: actions/upload-artifact@v3
+        with:
+          name: test-kibana-rules
+          path: windows_rules.ndjson
+          retention-days: 3
