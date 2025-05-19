@@ -4,10 +4,13 @@ on:
   push:
     branches:
       - add-artifact-creation-job
+  workflow_dispatch:
 
 jobs:
   convert-rules:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # Needed for creating releases
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -34,9 +37,14 @@ jobs:
           sigma convert -t lucene -p ecs_windows -f siem_rule_ndjson $(cat windows_rules.txt) > windows_rules.ndjson
           sed -i 's/"tags": \[[^]]*\]/"tags": \["Sigma Windows"\]/g; s/"severity": "informational"/"severity": "low"/g; s/"enabled": true/"enabled": false/g' windows_rules.ndjson
           
-      - name: Upload test artifacts
-        uses: actions/upload-artifact@v4
+      - name: Create GitHub Release
+        id: create_release
+        uses: softprops/action-gh-release@v1
         with:
-          name: test-kibana-rules
-          path: windows_rules.ndjson
-          retention-days: 3
+          name: "Sigma Rules for Kibana"
+          tag_name: sigma-rules-${{ github.run_number }}
+          files: windows_rules.ndjson
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
