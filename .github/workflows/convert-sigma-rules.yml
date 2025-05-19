@@ -4,7 +4,6 @@ on:
   push:
     branches:
       - add-artifact-creation
-  workflow_dispatch:
 
 jobs:
   convert-rules:
