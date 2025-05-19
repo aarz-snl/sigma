@@ -3,7 +3,7 @@ name: Convert Sigma Rules to Kibana
 on:
   push:
     branches:
-      - add-artifact-creation
+      - add-artifact-creation-job
   workflow_dispatch:
 
 jobs:
