@@ -3,12 +3,16 @@ name: Convert Sigma Rules to Kibana (Test)
 on:
   push:
     branches:
-      - add-artifact-creation-job
+      - add-artifact-creation
+  workflow_dispatch:
 
 jobs:
   convert-rules:
     runs-on: ubuntu-latest
     steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        
       - name: Clone Sigma Repository
         run: |
           git clone https://github.com/SigmaHQ/sigma.git
@@ -32,7 +36,7 @@ jobs:
           sed -i 's/"tags": \[[^]]*\]/"tags": \["Sigma Windows"\]/g; s/"severity": "informational"/"severity": "low"/g; s/"enabled": true/"enabled": false/g' windows_rules.ndjson
           
       - name: Upload test artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: test-kibana-rules
           path: windows_rules.ndjson
